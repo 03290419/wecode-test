@@ -38,7 +38,7 @@ class App {
     this.dataSource
       .initialize()
       .then(() => {
-        'Data Source has been initialized!';
+        console.log('Data Source has been initialized!');
       })
       .catch((err) => {
         console.error(err);
