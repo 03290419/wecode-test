@@ -9,6 +9,7 @@
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
+    "cors": "^2.8.5",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "nodemon": "^3.0.1",
