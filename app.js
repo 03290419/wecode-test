@@ -66,7 +66,7 @@ class App {
             `INSERT INTO users (email, name, password) VALUES (?, ?, ?)`,
             [email, name, hash],
           );
-          return res.json({ message: 'user created' });
+          return res.status(201).json({ message: 'user created' });
         } else {
           this.throwError(400);
         }
