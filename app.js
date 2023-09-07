@@ -3,6 +3,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 const { DataSource } = require('typeorm');
 
 class App {
