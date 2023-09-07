@@ -13,6 +13,7 @@ class App {
     this.setPort();
     this.setMiddleware();
     this.setTypeORM();
+    this.useRoute();
     this.throwError();
     this.status404();
     this.errorHandler();
@@ -44,6 +45,37 @@ class App {
         console.error(err);
       });
   }
+  useRoute() {
+    this.app.post('/signup', async (req, res, next) => {
+      try {
+        const { email, name, password } = req.body;
+        const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+        const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
+        const [existUser] = await this.dataSource.query(
+          `SELECT email FROM users WHERE email = ?`,
+          [email],
+        );
+        if (existUser) this.throwError(400, 'user already exist');
+        if (!email || !name || !password) this.throwError(400, 'key error');
+        const hash = await bcrypt.hash(password, 12);
+        if (
+          this.isValidData(emailRegExp, email) &&
+          this.isValidData(passwordRegExp, password)
+        ) {
+          await this.dataSource.query(
+            `INSERT INTO users (email, name, password) VALUES (?, ?, ?)`,
+            [email, name, hash],
+          );
+          return res.json({ message: 'user created' });
+        } else {
+          this.throwError(400);
+        }
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
+  }
   status404() {
     this.app.use((req, _, next) => {
       const error = new Error(`${req.method} ${req.url} router is not exist`);
@@ -59,6 +91,9 @@ class App {
       });
     });
   }
+  isValidData(reg, validationTarget) {
+    return reg.test(validationTarget);
+  }
   throwError(code, message) {
     if (!code) return;
     const error = new Error();
@@ -67,7 +102,7 @@ class App {
       [401, 'unAuthorized'],
       [500, 'internal server error'],
     ]);
-    if (!errorMessage.get(code)) {
+    if (!errorMessage.get(code) || message) {
       errorMessage.set(code, message);
     }
     error.message = errorMessage.get(code);
