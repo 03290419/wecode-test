@@ -9,8 +9,10 @@ const { DataSource } = require('typeorm');
 class App {
   constructor() {
     this.app = express();
-    this.setMiddleware();
+    this.dataSource;
     this.setPort();
+    this.setMiddleware();
+    this.setTypeORM();
     this.throwError();
     this.status404();
     this.errorHandler();
@@ -23,6 +25,24 @@ class App {
     this.app.use(morgan('dev'));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+  }
+  setTypeORM() {
+    this.dataSource = new DataSource({
+      type: process.env.TYPEORM_CONNECTION,
+      host: process.env.TYPEORM_HOST,
+      port: process.env.TYPEORM_PORT,
+      username: process.env.TYPEORM_USERNAME,
+      password: process.env.TYPEORM_PASSWORD,
+      database: process.env.TYPEORM_DATABASE,
+    });
+    this.dataSource
+      .initialize()
+      .then(() => {
+        'Data Source has been initialized!';
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }
   status404() {
     this.app.use((req, _, next) => {
