@@ -75,6 +75,31 @@ class App {
         next(err);
       }
     });
+    this.app.post('/signin', async (req, res, next) => {
+      try {
+        const { email, password } = req.body;
+        if (!email || !password) this.throwError(400, 'key error');
+        const [existUser] = await this.dataSource.query(
+          `SELECT id, email, password FROM users WHERE email = ?`,
+          [email],
+        );
+        if (existUser && existUser.email) {
+          const result = await bcrypt.compare(password, existUser.password);
+          if (!result) this.throwError(401);
+          res.header(
+            'access_token',
+            jwt.sign({ id: existUser.id }, process.env.JWT_SECRET, {
+              expiresIn: '30d',
+            }),
+          );
+          return res.status(200).json({ message: 'token created' });
+        }
+        this.throwError(400, "user doesn't exist");
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
   }
   status404() {
     this.app.use((req, _, next) => {
