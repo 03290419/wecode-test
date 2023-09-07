@@ -11,6 +11,9 @@ class App {
     this.app = express();
     this.setMiddleware();
     this.setPort();
+    this.throwError();
+    this.status404();
+    this.errorHandler();
   }
   setPort() {
     this.app.set('port', process.env.PORT || 8000);
@@ -20,6 +23,36 @@ class App {
     this.app.use(morgan('dev'));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+  }
+  status404() {
+    this.app.use((req, _, next) => {
+      const error = new Error(`${req.method} ${req.url} router is not exist`);
+      error.status = 404;
+      next(error);
+    });
+  }
+  errorHandler() {
+    this.app.use((err, _, res, next) => {
+      res.status(err.status || 500);
+      return res.json({
+        error: `${err.status} ${err.message}`,
+      });
+    });
+  }
+  throwError(code, message) {
+    if (!code) return;
+    const error = new Error();
+    const errorMessage = new Map([
+      [400, 'bad request'],
+      [401, 'unAuthorized'],
+      [500, 'internal server error'],
+    ]);
+    if (!errorMessage.get(code)) {
+      errorMessage.set(code, message);
+    }
+    error.message = errorMessage.get(code);
+    error.status = code;
+    throw error;
   }
 }
 
